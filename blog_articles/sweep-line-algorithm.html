@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>The Sweep Line Algorithm Explained | Anku Sharma</title>
+
+    <meta name="description" content="A deep dive into the Sweep Line algorithm, a powerful paradigm used in GIS, chip design, and gaming. Learn how it turns complex 2D problems into simple, sequential events.">
+
+    <link rel="canonical" href="https://granuels.github.io/Portfolio/blog_articles/sweep-line-algorithm.html" />
+    
+    <meta property="og:title" content="From Chaos to Order: The Magic of the Sweep Line Algorithm" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://granuels.github.io/Portfolio/blog_articles/sweep-line-algorithm.html" />
+    <meta property="og:image" content="https://granuels.github.io/Portfolio/assets/portfolio-preview.avif" /> <!-- IMPORTANT: Make sure this image exists -->
+    <meta property="og:description" content="A deep dive into the Sweep Line algorithm, a powerful paradigm used in GIS, chip design, and gaming." />
+    <meta property="og:site_name" content="Anku Sharma's Blog" />
+    
+     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="From Chaos to Order: The Magic of the Sweep Line Algorithm">
+    <meta name="twitter:description" content="A deep dive into the Sweep Line algorithm, a powerful paradigm used in GIS, chip design, and gaming.">
+    <meta name="twitter:image" content="https://granuels.github.io/Portfolio/assets/portfolio-preview.avif"> <!-- IMPORTANT: Make sure this image exists -->
+    
+     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/b2e0c5caee.js" crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" href="../css/sweep-line-algorithm.css">
+
+   
+ <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600;700&family=Merienda:wght@300..900&family=Oldenburg&display=swap&family=Averia+Sans+Libre:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/YOUR_FONT_AWESOME_KIT.js" crossorigin="anonymous"></script>
+
+  
+<script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "From Chaos to Order: The Magic of the Sweep Line Algorithm",
+      "name": "From Chaos to Order: The Magic of the Sweep Line Algorithm",
+      "author": {
+        "@type": "Person",
+        "name": "Anku Sharma",
+        "url": "https://www.linkedin.com/in/granuels/"
+      },
+      "datePublished": "2025-10-15",
+      "image": "https://granuels.github.io/Portfolio/assets/portfolio-preview.avif",
+      "description": "A deep dive into the Sweep Line algorithm, a powerful paradigm used in GIS, chip design, and gaming. Learn how it turns complex 2D problems into simple, sequential events.",
+      "publisher": {
+          "@type": "Person",
+          "name": "Anku Sharma"
+       }
+    }
+    </script>
+
+</head>
+
+<body>
+
+<header>
+      <nav class="navbar navbar-expand-lg navbar-dark fixed-top p-3" style="background-color: #121212;">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="../index.html"><i class="fa-solid fa-bug fa-lg" style="color: #e01aa1;"></i></a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarNavDropdown">
+            <ul class="navbar-nav ms-auto text-center">
+              <li class="nav-item">
+                <a class="nav-link mx-2" href="../aboutMe.html">About Me</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link mx-2" href="../WorkExperience.html">Work Experience</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link mx-2" href="../Projects.html">Projects</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link mx-2" href="../Blog.html">Blog</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+   
+
+    <header class="article-header">
+
+        <h1 class="main-article-title">
+
+          FROM CHAOS TO ORDER: Magic of the Sweep Line Algorithm
+
+        </h1>
+
+        <div class="author-info">
+
+            <p class="author-name">ANKU SHARMA</p>
+
+            <p class="publish-date">Published: October 15, 2025</p>
+
+        </div>
+
+    </header>
+
+
+
+  
+
+    <div class="article-container">
+
+        <section class="article-content">
+
+            <p>I spent a good chunk of my evening stuck on a LeetCode problem the other night: <b>LeetCode 253, "Meeting Rooms II."</b> The question itself seems simple enough: given a list of meeting times, what's the minimum number of rooms you'd need? </p>
+
+<p>The solution, it turns out, is a pretty slick trick. You split the start and end times, sort them, and walk through the timeline. A new meeting starts? Grab a room. A meeting ends? Free one up. It's the kind of clever hack that gets you that satisfying green "Accepted" and makes you feel smart for a minute.</p>
+
+<p>But something about it bugged me. It felt too clever, like a magic trick. I started digging into why it worked, and that's when I fell down the rabbit hole. I realized I hadn't just found a solution for a coding challenge. I'd accidentally stumbled upon a massive, powerful idea that real-world software relies on every day: the <b>Sweep Line algorithm</b>.</p>
+            <h2 class="section-heading">THE O(n²) TRAP</h2>
+
+            <p>So, why does any of this even matter? Let's step away from LeetCode for a second and think about a real-world, high-stakes problem. Imagine you're an engineer at Intel. On your screen is a blueprint for a new chip with literally millions of microscopic circuits. If just one of those circuits accidentally crosses another where it shouldn't, the whole multi-billion dollar project is a bust.</p>
+
+<p>How do you even begin to check for that? The obvious approach is to check every circuit against every other one. But that’s the classic <code>O(n^2)</code> trap. For millions of items, you’re looking at trillions of comparisons. It’s not just slow; it’s a non-starter. This isn't a theoretical problem you can solve by throwing more servers at it. It demands a fundamentally smarter approach.</p>
+            <h2 class="section-heading">FROM SPATIAL TO SEQUENTIAL</h2>
+
+            <p>The genius of the Sweep Line algorithm is that it completely reframes the problem. Instead of trying to comprehend a chaotic 2D mess all at once, you pretend to "sweep" an imaginary vertical line across it. It's like using a scanner to read a document line by line. You transform a messy spatial problem into a simple, orderly sequence of events.</p>
+
+<p>This imaginary line doesn't move smoothly; it intelligently jumps between what we call <b>Event Points</b>: the only moments in time (or, in our case, space) where something actually changes. For our circuits, that’s just the start and end of each one.</p>
+
+<p>To pull this off, the algorithm relies on two key tools:</p>
+<ul>
+<li><b>The Event Queue:</b> This is just our to-do list, sorted from left to right. It’s a queue of all the event points, telling our sweep line exactly where it needs to stop and think.</li>
+<li><b>The Status Structure:</b> This is the algorithm's short-term memory. It's a data structure (usually a Balanced Binary Search Tree, or BBST) that only keeps track of the circuits that our sweep line is currently touching. The secret sauce is that this structure is always sorted, so we can instantly find an object's neighbors in incredibly efficient <code>O(log k)</code> time.</li>
+</ul>
+
+            <h2 class="section-heading">SWEEP LINE VISUALIZER</h2>
+
+            <iframe 
+                src="../blog_articles/sweep-line-visualizer.html" 
+                class="visualizer-iframe"
+                title="Sweep Line Algorithm Visualizer">
+            </iframe>
+
+
+ 
+            <h2 class="section-heading">THE BLUEPRINT OF THE ALGORITHM</h2>
+
+            <p>When you put it all together, the "blueprint" for the algorithm is surprisingly intuitive. It’s a simple loop that processes events one by one, making smart, local decisions instead of dumb, global ones. This pseudocode captures the core idea:</p>
+<pre class="line-numbers"><code class="language-javascript">
+  FUNCTION SweepLine(geometric_objects):
+  
+  // 1. INITIALIZATION
+  // Create the event queue from the geometric objects.
+  Event_Queue = create_event_queue(geometric_objects) 
+  SORT(Event_Queue) // Sort the events by their primary coordinate (e.g., x-coordinate).
+  Status = INITIALIZE_EMPTY_STATUS() // Initialize an empty status structure.
+  Results = [] // Initialize a list to store the results.
+  
+  // 2. SWEEPING PROCESS
+  FOR EACH event IN Event_Queue: // Process each event in the sorted queue.
+    object = event.associated_object // Get the object associated with the current event.
+      IF event.type IS 'START': // An object is entering the sweep line's view.
+        ADD(object, TO Status) // Add the object to the Status structure.
+        // Find the new neighbors of this object in the Status.
+        neighbor_above = FIND_NEIGHBOR_ABOVE(object, IN Status) 
+        neighbor_below = FIND_NEIGHBOR_BELOW(object, IN Status)
+      
+        // Perform problem-specific checks with the new neighbors. 
+        // e.g., for an intersection problem
+        IF neighbor_above EXISTS AND INTERSECTS(object, neighbor_above):
+           ADD_INTERSECTION(object, neighbor_above, TO Results)
+           
+        IF neighbor_below EXISTS AND INTERSECTS(object, neighbor_below):
+           ADD_INTERSECTION(object, neighbor_below, TO Results)
+
+      // An object is leaving the sweep line's view. 
+      // Find the neighbors of this object *before* removing it.
+      ELSE IF event.type IS 'END':
+         neighbor_above = FIND_NEIGHBOR_ABOVE(object, IN Status)
+         neighbor_below = FIND_NEIGHBOR_BELOW(object, IN Status)
+
+        //Perform problem-specific checks on the former neighbors, 
+        // which will now become adjacent to each other.
+        IF neighbor_above EXISTS 
+        AND neighbor_below EXISTS 
+        AND INTERSECTS(neighbor_above, neighbor_below):
+            ADD_INTERSECTION(neighbor_above, neighbor_below, TO Results)
+        REMOVE(object, FROM Status) // Remove the object from the Status structure.
+        
+    // 3. FINALIZATION
+    RETURN Results 
+
+    
+</code></pre>
+
+
+
+            <h2 class="section-heading">THE BROADER IMPACT: FROM GEOMETRY TO SILICON</h2>
+
+            <p>This is the part that really got me. This isn't just an academic curiosity; this paradigm is a workhorse in some of the most impressive tech out there:</p>
+<ul>
+<li><b>GIS Software:</b> Ever wonder how a mapping application can instantly figure out how a planned highway will cross thousands of property lines? It’s not checking every single one. It’s sweeping a line across the map.</li>
+<li><b>Computer Graphics & Gaming:</b> This is fundamental for high-performance collision detection and figuring out which objects on a crowded screen are actually visible to the camera.</li>
+<li><b>VLSI and CAD Design:</b> As we talked about, it’s used to run Design Rule Checking (DRC) on microchips, saving billions of dollars by catching errors before manufacturing.</li>
+<li><b>Robotics and Motion Planning:</b> When planning a path for a robot arm in a cluttered factory, this approach is used to efficiently find potential collisions before they happen.</li>
+</ul>
+<p>That LeetCode problem suddenly felt a lot bigger. I realized that the "tricks" we learn for coding interviews are often just simplified shadows of these much deeper, more powerful ideas that genuinely build the world around us.</p>
+
+            <h2 class="section-heading">THINKING IN EVENTS</h2>
+
+           <p>In the end, the Sweep Line algorithm is more than just a tool. It’s a way of thinking. It teaches us that the hardest problems often don't need more brute-force computation; they just need a change in perspective.</p>
+<p>It’s a lens that lets us view two-dimensional chaos as an orderly march through time, one event at a time. It's a powerful reminder that sometimes, the most elegant solution isn't about working harder; it's about finding a smarter way to slice the problem.</p>
+<hr class="post-divider">
+        </section>
+
+    </div>
+
+    
+<footer class="site-footer">
+    <div class="footer-content">
+        <div class="footer-links">
+            <a href="https://www.linkedin.com/in/granuels/" target="_blank">LinkedIn</a>
+        </div>
+        <p class="copyright">&copy; 2025 Anku Sharma</p>
+    </div>
+</footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+</body>
+
+</html>
