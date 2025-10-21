@@ -52,9 +52,9 @@
       border: 1px solid var(--border-color);
       min-width: 0;
       height: 60vh;
-      touch-action: none;
       display: block;
       width: 100%;
+      touch-action: none;
     }
 
     #status-container {
@@ -104,22 +104,23 @@
       cursor: pointer;
       background-color: var(--accent-primary);
       color: var(--text-dark);
-      touch-action: manipulation; /* prevents 300ms delay & ghost click */
+      touch-action: manipulation;
       user-select: none;
-      min-width: 96px;          /* ✅ fixed width prevents layout shift */
+      min-width: 96px; /* keep width stable (Play/Pause) */
       text-align: center;
     }
 
     @media (max-width: 600px) {
       #animation-wrapper { flex-direction: column; }
-      #sweep-line-canvas   { height: 50vh; }
+      #sweep-line-canvas { height: 50vh; }
     }
   </style>
 </head>
 
 <body>
   <div id="animation-wrapper">
-    <svg id="sweep-line-canvas" preserveAspectRatio="none"></svg>
+    <!-- NOTE: no preserveAspectRatio="none" to avoid subpixel artifacts -->
+    <svg id="sweep-line-canvas"></svg>
     <div id="status-container">
       <h4>Status (Active Segments)</h4>
       <ul id="status-list"></ul>
@@ -144,26 +145,23 @@
       const EVENT_POINT_COLOR = '#fff';
       const ACTIVE_SEGMENT_COLOR = '#FFDE4D';
 
-      // Logical drawing space (fixed). We scale to fit actual pixels.
+      // Logical drawing space
       const VBW = 1000;
       const VBH = 600;
 
-      let segmentsNorm = [
-        // normalized [0..1] coords: easier to reflow on resize
+      const segmentsNorm = [
         { id: 1, x1: 0.10, y1: 0.25, x2: 0.50, y2: 0.40 },
         { id: 2, x1: 0.15, y1: 0.10, x2: 0.60, y2: 0.75 },
         { id: 3, x1: 0.20, y1: 0.60, x2: 0.75, y2: 0.25 },
         { id: 4, x1: 0.55, y1: 0.10, x2: 0.90, y2: 0.90 },
       ];
 
-      // Concrete segment objects in viewBox coords
       let segments = [];
-      let sweepLine;
-      let currentX = 0;       // in viewBox units (0..VBW)
+      let sweepLine = null;
+      let currentX = 0;   // in viewBox units (0..VBW)
       let isPlaying = false;
       let animationFrameId = null;
 
-      // --- helpers
       function toVBX(v) { return v * VBW; }
       function toVBY(v) { return v * VBH; }
 
@@ -184,6 +182,8 @@
         line.setAttribute('y2', y2);
         line.setAttribute('stroke', SEGMENT_COLOR);
         line.setAttribute('stroke-width', 2);
+        line.setAttribute('vector-effect', 'non-scaling-stroke');
+        line.setAttribute('shape-rendering', 'crispEdges');
         return line;
       }
 
@@ -193,6 +193,8 @@
         circle.setAttribute('cy', y);
         circle.setAttribute('r', 4);
         circle.setAttribute('fill', EVENT_POINT_COLOR);
+        circle.setAttribute('vector-effect', 'non-scaling-stroke');
+        circle.setAttribute('shape-rendering', 'crispEdges');
         return circle;
       }
 
@@ -202,8 +204,12 @@
           sweepLine.setAttribute('stroke', SWEEP_LINE_COLOR);
           sweepLine.setAttribute('stroke-width', 2);
           sweepLine.setAttribute('stroke-dasharray', '5,5');
+          sweepLine.setAttribute('vector-effect', 'non-scaling-stroke');
+          sweepLine.setAttribute('shape-rendering', 'crispEdges');
           svg.appendChild(sweepLine);
         }
+        // Clamp X and draw
+        currentX = Math.max(0, Math.min(currentX, VBW));
         sweepLine.setAttribute('x1', currentX);
         sweepLine.setAttribute('x2', currentX);
         sweepLine.setAttribute('y1', 0);
@@ -211,11 +217,9 @@
       }
 
       function buildScene() {
-        // Set a stable viewBox; avoid re-init on CSS/layout changes
         svg.setAttribute('viewBox', `0 0 ${VBW} ${VBH}`);
         svg.innerHTML = '';
 
-        // Build segments in viewBox space from normalized
         segments = segmentsNorm.map(s => ({
           id: s.id,
           x1: toVBX(s.x1), y1: toVBY(s.y1),
@@ -224,7 +228,6 @@
 
         computeStartsEnds();
 
-        // Draw segments + endpoints
         segments.forEach(s => {
           svg.appendChild(createLine(s.id, s.x1, s.y1, s.x2, s.y2));
           svg.appendChild(createEventPoint(s.x1, s.y1));
@@ -232,6 +235,8 @@
         });
 
         ensureSweepLine();
+        // Hide the sweep line when paused to avoid any edge artifacts
+        sweepLine.style.opacity = isPlaying ? '1' : '0';
       }
 
       function updateStatus() {
@@ -259,12 +264,10 @@
       function animate() {
         if (!isPlaying) return;
 
-        currentX += VBW / 500; // speed relative to logical width
+        currentX += VBW / 500;
         if (currentX > VBW) currentX = VBW;
 
-        sweepLine.setAttribute('x1', currentX);
-        sweepLine.setAttribute('x2', currentX);
-
+        ensureSweepLine();       // clamp + position
         updateStatus();
 
         if (currentX < VBW) {
@@ -272,15 +275,14 @@
         } else {
           isPlaying = false;
           playPauseBtn.textContent = 'Play';
+          sweepLine.style.opacity = '0'; // hide at end
         }
       }
 
       function initialize() {
-        // Reset state, but keep viewBox stable
-        statusList.innerHTML = '';
         if (animationFrameId) cancelAnimationFrame(animationFrameId);
-        currentX = 0;
         isPlaying = false;
+        currentX = 0;
         playPauseBtn.textContent = 'Play';
         buildScene();
         updateStatus();
@@ -288,10 +290,18 @@
 
       function handlePlayPause(e) {
         e.preventDefault();
-        if (currentX >= VBW) currentX = 0; // restart from beginning if at end
-        isPlaying = !isPlaying;
-        playPauseBtn.textContent = isPlaying ? 'Pause' : 'Play';
-        if (isPlaying) animate();
+        if (!isPlaying) {
+          // starting/resuming — show line
+          sweepLine.style.opacity = '1';
+          isPlaying = true;
+          playPauseBtn.textContent = 'Pause';
+          animate();
+        } else {
+          // pausing — hide line to avoid edge artifacts on tap
+          isPlaying = false;
+          playPauseBtn.textContent = 'Play';
+          sweepLine.style.opacity = '0';
+        }
       }
 
       function handleReset(e) {
@@ -299,20 +309,21 @@
         initialize();
       }
 
-      // One clean event per button
       playPauseBtn.addEventListener('click', handlePlayPause, { passive: false });
       resetBtn.addEventListener('click', handleReset, { passive: false });
 
-      // Preserve progress on any resize without re-initializing
-      let lastClientWidth = svg.clientWidth || 1;
+      // No resize re-initialization; viewBox scaling avoids jumps.
       window.addEventListener('resize', () => {
-        // No re-init; just reflow SVG via viewBox scaling (already fixed),
-        // and keep the same currentX in viewBox units. Nothing to do here.
-        // The fixed button width also prevents most layout resizes on tap.
-        lastClientWidth = svg.clientWidth || lastClientWidth;
+        // Keep progress; just rebuild visuals and keep currentX
+        const savedX = currentX;
+        const wasPlaying = isPlaying;
+        buildScene();
+        currentX = Math.max(0, Math.min(savedX, VBW));
+        ensureSweepLine();
+        updateStatus();
+        sweepLine.style.opacity = wasPlaying ? '1' : '0';
       }, { passive: true });
 
-      // First paint
       initialize();
     });
   </script>
