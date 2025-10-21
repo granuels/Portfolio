@@ -119,18 +119,14 @@ a{color:#fff;text-decoration:none;}
   .content__container{margin-top:1px;}
 }
 
-/* 1. Bring the navbar to the very top layer */
-.navbar {
-    position: relative; /* Ensures z-index will work */
-    z-index: 1000;
+/* --- Fix mobile menu overlay issue --- */
+.navbar-collapse {
+  position: relative;
+  z-index: 1001; /* keeps menu above animated content */
 }
 
-/* 2. Place the "Anku Sharma" text in the middle layer */
+.content,
 .text-container {
-    z-index: 2;
-}
-
-/* 3. Push the "Hello world!" animation to the back layer */
-.content {
-    z-index: 1;
+  z-index: 1; /* push animations behind nav menu */
+  position: relative; /* ensure z-index takes effect */
 }
