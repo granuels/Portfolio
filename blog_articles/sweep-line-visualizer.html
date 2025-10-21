@@ -24,7 +24,7 @@
       margin: 0;
       padding: 0;
       width: 100%;
-      min-height: 100vh; /* prevents zero height on mobile */
+      min-height: 100vh;
       overflow: hidden;
       font-family: 'Inter', sans-serif;
       color: var(--text-light);
@@ -51,7 +51,7 @@
       border-radius: 8px;
       border: 1px solid var(--border-color);
       min-width: 0;
-      height: 60vh; /* ensures visible area on phones */
+      height: 60vh;
       touch-action: none;
     }
 
@@ -101,8 +101,7 @@
       cursor: pointer;
       background-color: var(--accent-primary);
       color: var(--text-dark);
-      touch-action: manipulation; /* prevents synthetic click */
-      pointer-events: auto;
+      touch-action: manipulation; /* prevents ghost clicks */
       user-select: none;
     }
 
@@ -248,12 +247,10 @@
 
       function animate() {
         if (!isPlaying) return;
-
         const svgWidth = svg.clientWidth;
         currentX += svgWidth / 500;
         sweepLine.setAttribute('x1', currentX);
         sweepLine.setAttribute('x2', currentX);
-
         updateStatus();
 
         if (currentX < svgWidth) {
@@ -264,28 +261,22 @@
         }
       }
 
-      function handlePlayPause() {
+      function handlePlayPause(event) {
+        event.preventDefault(); // stops ghost clicks on mobile
         if (currentX >= svg.clientWidth) initialize();
         isPlaying = !isPlaying;
         playPauseBtn.textContent = isPlaying ? 'Pause' : 'Play';
         if (isPlaying) animate();
       }
 
-      // ✅ Safe tap/click handler – no double trigger
-      function addSafeClickListener(element, handler) {
-        let touchTriggered = false;
-        element.addEventListener('touchstart', e => {
-          touchTriggered = true;
-          handler(e);
-        });
-        element.addEventListener('click', e => {
-          if (touchTriggered) return;
-          handler(e);
-        });
+      function handleReset(event) {
+        event.preventDefault();
+        initialize();
       }
 
-      addSafeClickListener(playPauseBtn, handlePlayPause);
-      addSafeClickListener(resetBtn, initialize);
+      // ✅ One clean, cross-platform event binding
+      playPauseBtn.addEventListener('click', handlePlayPause, { passive: false });
+      resetBtn.addEventListener('click', handleReset, { passive: false });
 
       let resizeTimeout;
       new ResizeObserver(() => {
