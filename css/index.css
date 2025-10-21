@@ -119,14 +119,37 @@ a{color:#fff;text-decoration:none;}
   .content__container{margin-top:1px;}
 }
 
-/* --- Fix mobile menu overlay issue --- */
-.navbar-collapse {
-  position: relative;
-  z-index: 1001; /* keeps menu above animated content */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1001;
 }
 
+/* Prevent body content from hiding behind fixed navbar */
+body {
+  padding-top: 70px; /* matches navbar height (~56px–70px) */
+}
+
+/* Ensure animation sits correctly centered again */
 .content,
 .text-container {
-  z-index: 1; /* push animations behind nav menu */
-  position: relative; /* ensure z-index takes effect */
+  position: absolute;
+  z-index: 1; /* under navbar */
+}
+
+/* Make sure collapse menu overlays instead of pushing */
+.navbar-collapse {
+  position: absolute !important;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background-color: black; /* ensure visible background */
+  z-index: 1002;
+}
+
+/* Optional: better tap UX (avoids bounce scroll when opening menu) */
+html, body {
+  overflow-x: hidden;
 }
