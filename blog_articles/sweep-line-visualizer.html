@@ -119,7 +119,6 @@
 
 <body>
   <div id="animation-wrapper">
-    <!-- NOTE: no preserveAspectRatio="none" to avoid subpixel artifacts -->
     <svg id="sweep-line-canvas"></svg>
     <div id="status-container">
       <h4>Status (Active Segments)</h4>
@@ -208,7 +207,7 @@
           sweepLine.setAttribute('shape-rendering', 'crispEdges');
           svg.appendChild(sweepLine);
         }
-        // Clamp X and draw
+        // Clamp and draw
         currentX = Math.max(0, Math.min(currentX, VBW));
         sweepLine.setAttribute('x1', currentX);
         sweepLine.setAttribute('x2', currentX);
@@ -235,8 +234,7 @@
         });
 
         ensureSweepLine();
-        // Hide the sweep line when paused to avoid any edge artifacts
-        sweepLine.style.opacity = isPlaying ? '1' : '0';
+        sweepLine.style.opacity = '1'; // visible initially
       }
 
       function updateStatus() {
@@ -267,15 +265,18 @@
         currentX += VBW / 500;
         if (currentX > VBW) currentX = VBW;
 
-        ensureSweepLine();       // clamp + position
+        ensureSweepLine();
         updateStatus();
 
         if (currentX < VBW) {
           animationFrameId = requestAnimationFrame(animate);
         } else {
+          // Stop at end and keep line visible
+          currentX = VBW;
+          ensureSweepLine();
           isPlaying = false;
           playPauseBtn.textContent = 'Play';
-          sweepLine.style.opacity = '0'; // hide at end
+          sweepLine.style.opacity = '1'; // ✅ keep visible at end
         }
       }
 
@@ -290,17 +291,18 @@
 
       function handlePlayPause(e) {
         e.preventDefault();
+        // ✅ Restart from beginning if finished
+        if (currentX >= VBW) currentX = 0;
+        ensureSweepLine();
+        sweepLine.style.opacity = '1'; // ensure visible
         if (!isPlaying) {
-          // starting/resuming — show line
-          sweepLine.style.opacity = '1';
           isPlaying = true;
           playPauseBtn.textContent = 'Pause';
           animate();
         } else {
-          // pausing — hide line to avoid edge artifacts on tap
           isPlaying = false;
           playPauseBtn.textContent = 'Play';
-          sweepLine.style.opacity = '0';
+          sweepLine.style.opacity = '1'; // stay visible when paused
         }
       }
 
@@ -312,16 +314,15 @@
       playPauseBtn.addEventListener('click', handlePlayPause, { passive: false });
       resetBtn.addEventListener('click', handleReset, { passive: false });
 
-      // No resize re-initialization; viewBox scaling avoids jumps.
       window.addEventListener('resize', () => {
-        // Keep progress; just rebuild visuals and keep currentX
         const savedX = currentX;
         const wasPlaying = isPlaying;
         buildScene();
         currentX = Math.max(0, Math.min(savedX, VBW));
         ensureSweepLine();
         updateStatus();
-        sweepLine.style.opacity = wasPlaying ? '1' : '0';
+        sweepLine.style.opacity = '1';
+        if (wasPlaying) animate();
       }, { passive: true });
 
       initialize();
