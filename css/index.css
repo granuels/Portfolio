@@ -119,17 +119,12 @@ a{color:#fff;text-decoration:none;}
   .content__container{margin-top:1px;}
 }
 
-/* This rule applies only when the hamburger menu is open on mobile */
-.navbar {
-    z-index: 1050; 
-}
-
-/* This pushes the animation to a lower layer */
-.content {
-    z-index: 1;
-}
-
 .navbar {
     position: relative; /* This ensures z-index will work */
     z-index: 1000;
+}
+
+/* This pushes the animation to a layer behind the navbar */
+.content {
+    z-index: 1;
 }
