@@ -133,7 +133,7 @@ pre[class*="language-"] > code[class*="language-"] {
         padding-top: 5rem;
     }
     .article-header { padding: 2rem 1rem; }
-    .main-article-title { font-size: 2.8rem !important; }
+    .main-article-title { font-family: 'Inter', sans-serif; font-size: 2.8rem !important; }
     .article-container { padding: 0 1rem; }
     .article-content p, .article-content li { font-size: 1.1rem; }
     .section-heading { font-size: 1.8rem !important; }
