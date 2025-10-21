@@ -106,7 +106,7 @@
       color: var(--text-dark);
       touch-action: manipulation;
       user-select: none;
-      min-width: 96px; /* keep width stable (Play/Pause) */
+      min-width: 96px;
       text-align: center;
     }
 
@@ -144,7 +144,6 @@
       const EVENT_POINT_COLOR = '#fff';
       const ACTIVE_SEGMENT_COLOR = '#FFDE4D';
 
-      // Logical drawing space
       const VBW = 1000;
       const VBH = 600;
 
@@ -157,7 +156,7 @@
 
       let segments = [];
       let sweepLine = null;
-      let currentX = 0;   // in viewBox units (0..VBW)
+      let currentX = 0;
       let isPlaying = false;
       let animationFrameId = null;
 
@@ -182,7 +181,6 @@
         line.setAttribute('stroke', SEGMENT_COLOR);
         line.setAttribute('stroke-width', 2);
         line.setAttribute('vector-effect', 'non-scaling-stroke');
-        line.setAttribute('shape-rendering', 'crispEdges');
         return line;
       }
 
@@ -193,31 +191,26 @@
         circle.setAttribute('r', 4);
         circle.setAttribute('fill', EVENT_POINT_COLOR);
         circle.setAttribute('vector-effect', 'non-scaling-stroke');
-        circle.setAttribute('shape-rendering', 'crispEdges');
         return circle;
       }
 
-      function ensureSweepLine() {
-        if (!sweepLine) {
-          sweepLine = document.createElementNS(SVG_NS, 'line');
-          sweepLine.setAttribute('stroke', SWEEP_LINE_COLOR);
-          sweepLine.setAttribute('stroke-width', 2);
-          sweepLine.setAttribute('stroke-dasharray', '5,5');
-          sweepLine.setAttribute('vector-effect', 'non-scaling-stroke');
-          sweepLine.setAttribute('shape-rendering', 'crispEdges');
-          svg.appendChild(sweepLine);
-        }
-        // Clamp and draw
-        currentX = Math.max(0, Math.min(currentX, VBW));
-        sweepLine.setAttribute('x1', currentX);
-        sweepLine.setAttribute('x2', currentX);
-        sweepLine.setAttribute('y1', 0);
-        sweepLine.setAttribute('y2', VBH);
+      function createSweepLine() {
+        const line = document.createElementNS(SVG_NS, 'line');
+        line.setAttribute('stroke', SWEEP_LINE_COLOR);
+        line.setAttribute('stroke-width', 2);
+        line.setAttribute('stroke-dasharray', '5,5');
+        line.setAttribute('vector-effect', 'non-scaling-stroke');
+        line.setAttribute('y1', 0);
+        line.setAttribute('y2', VBH);
+        return line;
       }
 
       function buildScene() {
         svg.setAttribute('viewBox', `0 0 ${VBW} ${VBH}`);
         svg.innerHTML = '';
+
+        // ⚡ Force a reflow to ensure Safari/Chrome mobile repaint properly
+        void svg.offsetWidth;
 
         segments = segmentsNorm.map(s => ({
           id: s.id,
@@ -233,13 +226,20 @@
           svg.appendChild(createEventPoint(s.x2, s.y2));
         });
 
-        ensureSweepLine();
-        sweepLine.style.opacity = '1'; // visible initially
+        sweepLine = createSweepLine();
+        svg.appendChild(sweepLine);
+        updateSweepLine();
+      }
+
+      function updateSweepLine() {
+        if (!sweepLine) return;
+        currentX = Math.max(0, Math.min(currentX, VBW));
+        sweepLine.setAttribute('x1', currentX);
+        sweepLine.setAttribute('x2', currentX);
       }
 
       function updateStatus() {
         const active = segments.filter(s => currentX >= s.startX && currentX <= s.endX);
-
         statusList.innerHTML = '';
         active.sort((a,b) => {
           const yA = a.y1 + (a.y2 - a.y1) * (currentX - a.x1) / (a.x2 - a.x1 || 1);
@@ -265,18 +265,17 @@
         currentX += VBW / 500;
         if (currentX > VBW) currentX = VBW;
 
-        ensureSweepLine();
+        updateSweepLine();
         updateStatus();
 
         if (currentX < VBW) {
           animationFrameId = requestAnimationFrame(animate);
         } else {
-          // Stop at end and keep line visible
+          // ✅ End cleanly, keep line visible
           currentX = VBW;
-          ensureSweepLine();
+          updateSweepLine();
           isPlaying = false;
           playPauseBtn.textContent = 'Play';
-          sweepLine.style.opacity = '1'; // ✅ keep visible at end
         }
       }
 
@@ -291,10 +290,8 @@
 
       function handlePlayPause(e) {
         e.preventDefault();
-        // ✅ Restart from beginning if finished
         if (currentX >= VBW) currentX = 0;
-        ensureSweepLine();
-        sweepLine.style.opacity = '1'; // ensure visible
+        updateSweepLine();
         if (!isPlaying) {
           isPlaying = true;
           playPauseBtn.textContent = 'Pause';
@@ -302,13 +299,12 @@
         } else {
           isPlaying = false;
           playPauseBtn.textContent = 'Play';
-          sweepLine.style.opacity = '1'; // stay visible when paused
         }
       }
 
       function handleReset(e) {
         e.preventDefault();
-        initialize();
+        initialize(); // ✅ rebuilds with visible line (now guaranteed on mobile)
       }
 
       playPauseBtn.addEventListener('click', handlePlayPause, { passive: false });
@@ -319,9 +315,8 @@
         const wasPlaying = isPlaying;
         buildScene();
         currentX = Math.max(0, Math.min(savedX, VBW));
-        ensureSweepLine();
+        updateSweepLine();
         updateStatus();
-        sweepLine.style.opacity = '1';
         if (wasPlaying) animate();
       }, { passive: true });
 
