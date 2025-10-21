@@ -119,12 +119,18 @@ a{color:#fff;text-decoration:none;}
   .content__container{margin-top:1px;}
 }
 
+/* 1. Bring the navbar to the very top layer */
 .navbar {
-    position: relative; /* This ensures z-index will work */
+    position: relative; /* Ensures z-index will work */
     z-index: 1000;
 }
 
-/* This pushes the animation to a layer behind the navbar */
+/* 2. Place the "Anku Sharma" text in the middle layer */
+.text-container {
+    z-index: 2;
+}
+
+/* 3. Push the "Hello world!" animation to the back layer */
 .content {
     z-index: 1;
 }
