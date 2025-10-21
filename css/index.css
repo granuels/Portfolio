@@ -118,3 +118,20 @@ a{color:#fff;text-decoration:none;}
   .content{top:35%;}
   .content__container{margin-top:1px;}
 }
+
+/* This rule applies only when the hamburger menu is open on mobile */
+.navbar-collapse.show {
+    background-color: #000; /* Ensures the menu has a solid black background */
+    padding: 1rem;          /* Adds some nice spacing inside the open menu */
+    border-radius: 8px;     /* Optional: matches your other design elements */
+}
+
+/* This is the key fix: it raises the menu's layer */
+.navbar {
+    z-index: 1050; /* A high number to ensure it's on top */
+}
+
+/* This pushes the animation to a lower layer */
+.content {
+    z-index: 1;
+}
