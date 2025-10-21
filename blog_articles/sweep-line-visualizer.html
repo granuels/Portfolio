@@ -24,7 +24,7 @@
       margin: 0;
       padding: 0;
       width: 100%;
-      min-height: 100vh; /* ✅ prevents zero height on mobile */
+      min-height: 100vh; /* prevents zero height on mobile */
       overflow: hidden;
       font-family: 'Inter', sans-serif;
       color: var(--text-light);
@@ -51,7 +51,7 @@
       border-radius: 8px;
       border: 1px solid var(--border-color);
       min-width: 0;
-      height: 60vh; /* ✅ ensures visible area on phones */
+      height: 60vh; /* ensures visible area on phones */
       touch-action: none;
     }
 
@@ -95,13 +95,13 @@
 
     button {
       font-weight: 600;
-      padding: 12px 20px; /* ✅ larger for touch */
+      padding: 12px 20px;
       border-radius: 8px;
       border: none;
       cursor: pointer;
       background-color: var(--accent-primary);
       color: var(--text-dark);
-      touch-action: manipulation; /* ✅ proper touch click */
+      touch-action: manipulation; /* prevents synthetic click */
       pointer-events: auto;
       user-select: none;
     }
@@ -193,7 +193,7 @@
         if (animationFrameId) cancelAnimationFrame(animationFrameId);
 
         const svgWidth = svg.clientWidth;
-        const svgHeight = svg.clientHeight || window.innerHeight * 0.6; // ✅ fallback height
+        const svgHeight = svg.clientHeight || window.innerHeight * 0.6;
 
         segments = [
           { id: 1, x1: svgWidth * 0.1, y1: svgHeight * 0.25, x2: svgWidth * 0.5, y2: svgHeight * 0.4 },
@@ -271,10 +271,21 @@
         if (isPlaying) animate();
       }
 
-      ['click', 'touchstart'].forEach(evt => {
-        playPauseBtn.addEventListener(evt, handlePlayPause);
-        resetBtn.addEventListener(evt, initialize);
-      });
+      // ✅ Safe tap/click handler – no double trigger
+      function addSafeClickListener(element, handler) {
+        let touchTriggered = false;
+        element.addEventListener('touchstart', e => {
+          touchTriggered = true;
+          handler(e);
+        });
+        element.addEventListener('click', e => {
+          if (touchTriggered) return;
+          handler(e);
+        });
+      }
+
+      addSafeClickListener(playPauseBtn, handlePlayPause);
+      addSafeClickListener(resetBtn, initialize);
 
       let resizeTimeout;
       new ResizeObserver(() => {
