@@ -18,7 +18,6 @@
             --border-color: #333;
         }
 
-        
         html, body {
             margin: 0;
             padding: 0;
@@ -252,7 +251,8 @@
                 }
             }
 
-            playPauseBtn.addEventListener('click', () => {
+            // --- THIS IS THE FIX ---
+            function handlePlayPause() {
                 if (currentX >= svg.clientWidth) {
                     initialize();
                 }
@@ -261,9 +261,20 @@
                 if (isPlaying) {
                     animate();
                 }
+            }
+
+            // Listen for both click (desktop) and touchstart (mobile)
+            playPauseBtn.addEventListener('click', handlePlayPause);
+            playPauseBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault(); // Prevents a "ghost click"
+                handlePlayPause();
             });
 
             resetBtn.addEventListener('click', initialize);
+            resetBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                initialize();
+            });
 
             new ResizeObserver(initialize).observe(svg);
             
