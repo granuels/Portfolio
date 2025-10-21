@@ -129,18 +129,7 @@ a{color:#fff;text-decoration:none;}
     z-index: 1;
 }
 
-/* This applies the new "glass" effect to the open menu */
-.navbar-collapse.show {
-    /* A semi-transparent black background */
-    background-color: rgba(18, 18, 18, 0.6); 
-    
-    /* This blurs the content behind the menu */
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px); /* For Safari compatibility */
-    
-    /* Adds some nice spacing and rounded corners */
-    padding: 1.5rem;          
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    margin-top: 0.5rem; /* Pushes menu down slightly from the hamburger icon */
+.navbar {
+    position: relative; /* This ensures z-index will work */
+    z-index: 1000;
 }
