@@ -119,37 +119,46 @@ a{color:#fff;text-decoration:none;}
   .content__container{margin-top:1px;}
 }
 
-.navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 1001;
+/* === NAV: restore behavior without desktop layout bugs === */
+:root { --nav-h: 64px; } /* tweak if your navbar is taller/shorter */
+
+/* Mobile & tablet: fixed nav + body offset + overlay collapse */
+@media (max-width: 991.98px) {
+  body {
+    padding-top: var(--nav-h); /* prevent content hiding behind fixed nav */
+  }
+
+  .navbar {
+    position: fixed;
+    top: 0; left: 0; width: 100%;
+    z-index: 1001;
+  }
+
+  /* Collapse should overlay content, not push it */
+  .navbar-collapse {
+    position: absolute !important;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background-color: #000;
+    z-index: 1002;
+  }
 }
 
-/* Prevent body content from hiding behind fixed navbar */
-body {
-  padding-top: 70px; /* matches navbar height (~56px–70px) */
+/* Desktop: no body padding, no weird top gap */
+@media (min-width: 992px) {
+  body { padding-top: 0; }              /* remove the extra space on large screens */
+  .navbar { position: sticky; top: 0; z-index: 1001; } /* stays at top without overlaying */
+  .navbar-collapse { position: static !important; background: transparent; z-index: auto; }
 }
 
-/* Ensure animation sits correctly centered again */
+/* Ensure animated content sits under nav when it overlays */
 .content,
 .text-container {
   position: absolute;
-  z-index: 1; /* under navbar */
+  z-index: 1; /* navbar is higher (1001/1002) */
 }
 
-/* Make sure collapse menu overlays instead of pushing */
-.navbar-collapse {
-  position: absolute !important;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  background-color: black; /* ensure visible background */
-  z-index: 1002;
-}
+/* Keep horizontal overflow off (you already had this; safe to retain) */
+html, body { overflow-x: hidden; }
 
-/* Optional: better tap UX (avoids bounce scroll when opening menu) */
-html, body {
-  overflow-x: hidden;
-}
