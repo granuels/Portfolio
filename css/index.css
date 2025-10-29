@@ -162,3 +162,8 @@ a{color:#fff;text-decoration:none;}
 /* Keep horizontal overflow off (you already had this; safe to retain) */
 html, body { overflow-x: hidden; }
 
+.allicons {
+  z-index: 2000; /* ensures the icons are above all other layers */
+}
+
+
